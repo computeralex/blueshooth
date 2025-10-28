@@ -45,8 +45,62 @@ class BluetoothManager {
         }
     }
 
+    func isConnected(_ device: BluetoothDevice) -> Bool {
+        return device.deviceRef.isConnected()
+    }
+
     func isAutoConnectDisabled(for device: BluetoothDevice) -> Bool {
         return disabledDevices.contains(device.address)
+    }
+
+    func connectDevice(_ device: BluetoothDevice) -> Bool {
+        // If device is already connected, return true
+        if device.deviceRef.isConnected() {
+            return true
+        }
+
+        // Attempt to open connection
+        let result = device.deviceRef.openConnection()
+
+        if result == kIOReturnSuccess {
+            // Show success notification
+            let notification = NSUserNotification()
+            notification.title = "BlueShooth"
+            notification.informativeText = "Connected to \(device.name)"
+            notification.soundName = NSUserNotificationDefaultSoundName
+            NSUserNotificationCenter.default.deliver(notification)
+            return true
+        } else {
+            // Show error notification
+            let notification = NSUserNotification()
+            notification.title = "BlueShooth"
+            notification.informativeText = "Failed to connect to \(device.name)"
+            notification.soundName = NSUserNotificationDefaultSoundName
+            NSUserNotificationCenter.default.deliver(notification)
+            return false
+        }
+    }
+
+    func disconnectDevice(_ device: BluetoothDevice) -> Bool {
+        // If device is not connected, return true
+        if !device.deviceRef.isConnected() {
+            return true
+        }
+
+        // Close the connection
+        let result = device.deviceRef.closeConnection()
+
+        if result == kIOReturnSuccess {
+            // Show success notification
+            let notification = NSUserNotification()
+            notification.title = "BlueShooth"
+            notification.informativeText = "Disconnected from \(device.name)"
+            notification.soundName = NSUserNotificationDefaultSoundName
+            NSUserNotificationCenter.default.deliver(notification)
+            return true
+        } else {
+            return false
+        }
     }
 
     func toggleAutoConnect(for device: BluetoothDevice) {

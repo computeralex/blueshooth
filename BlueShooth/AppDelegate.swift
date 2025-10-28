@@ -50,24 +50,64 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(noDevicesItem)
         } else {
             for device in pairedDevices {
-                let deviceItem = NSMenuItem(
-                    title: device.name,
+                // Create submenu for each device
+                let deviceItem = NSMenuItem(title: device.name, action: nil, keyEquivalent: "")
+                let deviceSubmenu = NSMenu()
+
+                // Connection status
+                let isConnected = bluetoothManager.isConnected(device)
+                let statusItem = NSMenuItem(
+                    title: isConnected ? "🟢 Connected" : "⚪️ Disconnected",
+                    action: nil,
+                    keyEquivalent: ""
+                )
+                statusItem.isEnabled = false
+                deviceSubmenu.addItem(statusItem)
+                deviceSubmenu.addItem(NSMenuItem.separator())
+
+                // Connect/Disconnect option
+                if isConnected {
+                    let disconnectItem = NSMenuItem(
+                        title: "Disconnect",
+                        action: #selector(disconnectDevice(_:)),
+                        keyEquivalent: ""
+                    )
+                    disconnectItem.target = self
+                    disconnectItem.representedObject = device
+                    deviceSubmenu.addItem(disconnectItem)
+                } else {
+                    let connectItem = NSMenuItem(
+                        title: "Connect",
+                        action: #selector(connectDevice(_:)),
+                        keyEquivalent: ""
+                    )
+                    connectItem.target = self
+                    connectItem.representedObject = device
+                    deviceSubmenu.addItem(connectItem)
+                }
+
+                deviceSubmenu.addItem(NSMenuItem.separator())
+
+                // Auto-connect toggle
+                let autoConnectDisabled = bluetoothManager.isAutoConnectDisabled(for: device)
+                let autoConnectItem = NSMenuItem(
+                    title: autoConnectDisabled ? "🚫 Auto-connect: Disabled" : "✓ Auto-connect: Enabled",
                     action: #selector(toggleDeviceAutoConnect(_:)),
                     keyEquivalent: ""
                 )
-                deviceItem.target = self
-                deviceItem.representedObject = device
+                autoConnectItem.target = self
+                autoConnectItem.representedObject = device
+                autoConnectItem.state = autoConnectDisabled ? .on : .off
+                deviceSubmenu.addItem(autoConnectItem)
 
-                // Check if auto-connect is disabled for this device
-                if bluetoothManager.isAutoConnectDisabled(for: device) {
-                    deviceItem.state = .on
-                    deviceItem.attributedTitle = NSAttributedString(
-                        string: "🚫 \(device.name) (Auto-connect disabled)",
-                        attributes: [.font: NSFont.systemFont(ofSize: 13)]
-                    )
+                // Set the submenu
+                deviceItem.submenu = deviceSubmenu
+
+                // Update main item title based on connection status
+                if isConnected {
+                    deviceItem.title = "🟢 \(device.name)"
                 } else {
-                    deviceItem.state = .off
-                    deviceItem.title = "✓ \(device.name) (Auto-connect enabled)"
+                    deviceItem.title = "⚪️ \(device.name)"
                 }
 
                 menu.addItem(deviceItem)
@@ -83,6 +123,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Quit
         menu.addItem(NSMenuItem(title: "Quit BlueShooth", action: #selector(quitApp), keyEquivalent: "q"))
+    }
+
+    @objc func connectDevice(_ sender: NSMenuItem) {
+        guard let device = sender.representedObject as? BluetoothDevice else { return }
+
+        _ = bluetoothManager.connectDevice(device)
+
+        // Refresh menu after a short delay to show updated connection status
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.setupMenu()
+        }
+    }
+
+    @objc func disconnectDevice(_ sender: NSMenuItem) {
+        guard let device = sender.representedObject as? BluetoothDevice else { return }
+
+        _ = bluetoothManager.disconnectDevice(device)
+
+        // Refresh menu after a short delay to show updated connection status
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.setupMenu()
+        }
     }
 
     @objc func toggleDeviceAutoConnect(_ sender: NSMenuItem) {

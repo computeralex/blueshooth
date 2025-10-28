@@ -16,8 +16,10 @@ BlueShooth runs in your menu bar and lets you choose which paired devices should
 ## Features
 
 - 🎯 **Selective Auto-Connect Control**: Choose which devices can auto-connect
+- 🔌 **Quick Connect/Disconnect**: Connect or disconnect devices directly from the menu bar
+- 🟢 **Real-Time Status**: See which devices are currently connected
 - 🚫 **Automatic Blocking**: Instantly disconnects blocked devices if they try to auto-connect
-- 🔔 **Notifications**: Get notified when a blocked device is disconnected
+- 🔔 **Notifications**: Get notified about connection events
 - 📱 **Menu Bar Interface**: Quick access to all paired devices
 - 💾 **Persistent Settings**: Your preferences are saved between sessions
 - 🔒 **Privacy-Focused**: All settings stored locally, no data collection
@@ -53,37 +55,48 @@ Download the latest release from the [Releases](https://github.com/yourusername/
 1. **Launch BlueShooth**: The app appears in your menu bar with a Bluetooth antenna icon
 
 2. **View Devices**: Click the menu bar icon to see all paired Bluetooth devices
+   - 🟢 = Currently connected
+   - ⚪️ = Disconnected
 
-3. **Toggle Auto-Connect**:
-   - ✓ = Auto-connect enabled (default macOS behavior)
-   - 🚫 = Auto-connect disabled (device will be disconnected if it tries to connect automatically)
+3. **Connect/Disconnect Devices**:
+   - Click on any device to open its submenu
+   - Choose "Connect" to connect a disconnected device
+   - Choose "Disconnect" to disconnect a connected device
+   - No need to open System Settings!
 
-4. **Manual Connection**: You can still connect to disabled devices manually through System Settings > Bluetooth
+4. **Toggle Auto-Connect**:
+   - In the device submenu, click the auto-connect option
+   - ✓ Auto-connect: Enabled = Normal macOS behavior
+   - 🚫 Auto-connect: Disabled = Device will be blocked from auto-connecting
+
+5. **Refresh**: Click "Refresh Devices" to update the device list
 
 ## How It Works
 
-BlueShooth monitors Bluetooth connection events and automatically disconnects devices you've marked as "auto-connect disabled". The app:
+BlueShooth provides direct control over Bluetooth connections without opening System Settings. The app:
 
-1. Lists all paired Bluetooth devices from your system
-2. Stores your auto-connect preferences locally using UserDefaults
-3. Monitors system Bluetooth notifications
-4. Disconnects blocked devices immediately when they try to auto-connect
-5. Shows a notification when a device is blocked
+1. Lists all paired Bluetooth devices with real-time connection status
+2. Allows you to connect/disconnect devices programmatically via IOBluetooth
+3. Stores your auto-connect preferences locally using UserDefaults
+4. Monitors system Bluetooth notifications
+5. Disconnects blocked devices immediately when they try to auto-connect
+6. Shows notifications for connection events
 
 ## Permissions
 
 BlueShooth requires Bluetooth access to:
 - List paired devices
 - Monitor connection events
-- Disconnect devices
+- Connect and disconnect devices programmatically
 
 The app will request Bluetooth permissions on first launch.
 
 ## Limitations
 
 - Device must remain paired (unpaired devices can't be managed)
-- Manual connections through System Settings will still work
+- Some Bluetooth devices may not support programmatic connection/disconnection
 - Some devices may attempt to reconnect multiple times (the app will continue blocking them)
+- Connection success depends on device proximity and Bluetooth stack availability
 
 ## Development
 
@@ -136,12 +149,14 @@ Contributions are welcome! Please feel free to submit a Pull Request. For major 
 
 ## Roadmap
 
+- [x] Quick connect/disconnect from menu bar
 - [ ] Add device grouping/favorites
 - [ ] Customize notification sounds
 - [ ] Schedule-based auto-connect rules
 - [ ] Battery level indicators for devices
 - [ ] Launch at login option
 - [ ] Keyboard shortcuts
+- [ ] Connection history tracking
 
 ## License
 
