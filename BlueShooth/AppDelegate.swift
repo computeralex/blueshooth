@@ -21,9 +21,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup menu
         setupMenu()
-
-        // Request Bluetooth permissions
-        IOBluetoothPreferenceSetControllerPowerState(1)
     }
 
     @objc func statusBarButtonClicked() {
