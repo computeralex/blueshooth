@@ -1,5 +1,6 @@
 import Foundation
 import IOBluetooth
+import UserNotifications
 
 struct BluetoothDevice: Hashable {
     let address: String
@@ -24,6 +25,23 @@ class BluetoothManager {
         loadDisabledDevices()
         refreshDevices()
         setupBluetoothMonitoring()
+        requestNotificationPermissions()
+    }
+
+    private func requestNotificationPermissions() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            // Permissions handled silently
+        }
+    }
+
+    private func sendNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     func getPairedDevices() -> [BluetoothDevice] {
@@ -63,20 +81,10 @@ class BluetoothManager {
         let result = device.deviceRef.openConnection()
 
         if result == kIOReturnSuccess {
-            // Show success notification
-            let notification = NSUserNotification()
-            notification.title = "BlueShooth"
-            notification.informativeText = "Connected to \(device.name)"
-            notification.soundName = NSUserNotificationDefaultSoundName
-            NSUserNotificationCenter.default.deliver(notification)
+            sendNotification(title: "BlueShooth", body: "Connected to \(device.name)")
             return true
         } else {
-            // Show error notification
-            let notification = NSUserNotification()
-            notification.title = "BlueShooth"
-            notification.informativeText = "Failed to connect to \(device.name)"
-            notification.soundName = NSUserNotificationDefaultSoundName
-            NSUserNotificationCenter.default.deliver(notification)
+            sendNotification(title: "BlueShooth", body: "Failed to connect to \(device.name)")
             return false
         }
     }
@@ -91,12 +99,7 @@ class BluetoothManager {
         let result = device.deviceRef.closeConnection()
 
         if result == kIOReturnSuccess {
-            // Show success notification
-            let notification = NSUserNotification()
-            notification.title = "BlueShooth"
-            notification.informativeText = "Disconnected from \(device.name)"
-            notification.soundName = NSUserNotificationDefaultSoundName
-            NSUserNotificationCenter.default.deliver(notification)
+            sendNotification(title: "BlueShooth", body: "Disconnected from \(device.name)")
             return true
         } else {
             return false
@@ -131,7 +134,7 @@ class BluetoothManager {
     private func setupBluetoothMonitoring() {
         // Monitor Bluetooth connection attempts
         NotificationCenter.default.addObserver(
-            forName: NSNotification.Name.IOBluetoothDeviceConnected,
+            forName: NSNotification.Name(rawValue: "IOBluetoothDeviceConnectedNotification"),
             object: nil,
             queue: .main
         ) { [weak self] notification in
@@ -149,13 +152,7 @@ class BluetoothManager {
         if disabledDevices.contains(address) {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 device.closeConnection()
-
-                // Show notification to user
-                let notification = NSUserNotification()
-                notification.title = "BlueShooth"
-                notification.informativeText = "Blocked auto-connect for \(device.name ?? "device")"
-                notification.soundName = NSUserNotificationDefaultSoundName
-                NSUserNotificationCenter.default.deliver(notification)
+                self.sendNotification(title: "BlueShooth", body: "Blocked auto-connect for \(device.name ?? "device")")
             }
         }
     }
